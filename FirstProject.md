@@ -33,7 +33,8 @@ pop.set_index('기간',inplace=True)
 pop.drop(['합계.1','합계.2','한국인.1','한국인.2','등록외국인.1','등록외국인.2','인구밀도','인구밀도.1','세대당인구','65세이상고령자'],axis=1,inplace=True)
 pop = pop[~pop['자치구'].str.contains('합계')]
 pop = pop.drop(pop.index[0])
-pop = pop.groupby(['기간','자치구']).sum()
+pop = pop.groupby(['기간','자치구']).sum()/4 #왜 mean은 안되는건지 찾아볼것
+pop[['세대','합계','한국인','등록외국인']] = pop[['세대','합계','한국인','등록외국인']].astype(int) #우선 합계를 4로 나눈것이기때문에 float 값을 int 값으로 변환 시켜줘야 함.
 display(pop)
 
 #3가지 concat으로 데이터 통합
