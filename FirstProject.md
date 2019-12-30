@@ -5,18 +5,18 @@ import numpy as np
 import pandas as pd
 
 #범죄율
-pd.read_table(./)
 crime = pd.read_excel('./data/Report.xls')
-crime.drop(['합계.1','살인.1','강도.1','강간강제추행.1','절도.1','폭력.1'],axis=1,inplace=True)
+#crime에서 column들을 drop시킬때, column_name보다 편리한 방법 사용.
+crime.drop(crime.columns[3::2],axis=1,inplace=True)
 display(crime)
-#dateframe 내 자치구 칼럼에서 합계 문자열 포함한 행 제거
+#dateframe 내 자치구 칼럼에서 합계 문자열 포함한 행 제거 리스트 컴프리헨션
 crime = crime[~crime['자치구'].str.contains('합계')]
 #0 인덱스는 다음 작업에서 불필요하므로 제거
 crime.drop([0],axis=0,inplace=True)
-crime['기간']=crime['기간'].astype(int)
-#crime.drop('기간',inplace=True)
-crime1 = crime.groupby(['기간','자치구']).sum()
-crime1
+crime['기간']=crime['기간'].astype(int)#int 타입으로 바꿔주는 이유는 아래 데이터와 합칠때 다르다고 인식하는것을 방지하기 위해 작업함.
+crime = crime.pivot_table(index = ['기간','자치구'],aggfunc='first')#non numeric value 연산 넘길때 aggfunc ='first' 사용한다.
+
+crime
 
 #CCTV 지역별 설치 개수
 cctv = pd.read_excel('./data/CCTV통계.xlsx')
