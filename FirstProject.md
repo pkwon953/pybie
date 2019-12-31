@@ -20,27 +20,38 @@ crime
 
 #CCTV 지역별 설치 개수
 cctv = pd.read_excel('./data/CCTV통계.xlsx')
-cctv = cctv.drop(['소계','2011년 이전','2012년','2013년'],axis=1)
-cctv.columns = ['기관명',2014,2015,2016,2017,2018]
-cctv['기관명']=cctv1['기관명'].str.replace(" ","")
-cctv = cctv.set_index('기관명')
+cctv = cctv.drop(cctv.columns[1:5],axis=1)
+cctv.columns = ['자치구',2014,2015,2016,2017,2018]
+cctv['자치구']=cctv1['자치구'].str.replace(" ","")
+cctv = cctv.set_index('자치구')
 cctv = cctv.unstack(level=0)
 display(cctv)
 
 #서울시 지역별 인구 수
-pop = pd.read_excel('./data/인구통계.xls',header=1)
+pop = pd.read_excel('./data/서울시 주민등록인구 (구별) 통계(2014년~2018년).xls',header=1)
 pop.set_index('기간',inplace=True)
-pop.drop(['합계.1','합계.2','한국인.1','한국인.2','등록외국인.1','등록외국인.2','인구밀도','인구밀도.1','세대당인구','65세이상고령자'],axis=1,inplace=True)
+#불필요한 데이터 칼럼 삭제
+pop.drop(pop.columns[3::4],axis=1,inplace=True)
+pop.drop(pop.columns[3::2],axis=1,inplace=True)
+pop.drop(pop.columns[5:],axis=1,inplace=True)
+
+# pop.set_index('기간',inplace=True)
 pop = pop[~pop['자치구'].str.contains('합계')]
 pop = pop.drop(pop.index[0])
-pop = pop.groupby(['기간','자치구']).sum()/4 #왜 mean은 안되는건지 찾아볼것
-pop[['세대','합계','한국인','등록외국인']] = pop[['세대','합계','한국인','등록외국인']].astype(int) #우선 합계를 4로 나눈것이기때문에 float 값을 int 값으로 변환 시켜줘야 함.
+
+pop = pop.pivot_table(index = ['기간','자치구'],aggfunc='first')
 display(pop)
 
 #3가지 concat으로 데이터 통합
 merged = pd.concat([cctv,pop,crime],axis=1)
 merged1=merged.to_excel('./data/merged1.xlsx') #통합데이터 엑셀파일로 우선 저장
 
+merged = pd.read_excel('./data/merged3.xlsx',index_col=[0,1])
+
+merged.rename(columns={0:'CCTV'},inplace=True)
+merged['10만명당 범죄 수']=merged['범죄합']/merged['합계']*100000
+merged['10만명당 CCTV 수']=merged['CCTV']/merged['합계']*100000
+merged[['10만명당 범죄 수','10만명당 CCTV 수']]=merged[['10만명당 범죄 수','10만명당 CCTV 수']].astype(int)
 
 ```
 
