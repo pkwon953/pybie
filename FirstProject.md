@@ -58,6 +58,51 @@ merged[['10만명당 범죄 수','10만명당 CCTV 수']]=merged[['10만명당 �
 # **2. 그래프 시각화**
 
 ```python
+df = pd.read_excel('./data/merged4(최종본).xlsx', index_col=[0,1])
+# display(df.head())
+df.columns=df.columns.map(str)
+#print(df)
+
+df1 = df.loc[2018]
+df2 = pd.read_table('./data/지역구.txt',header=None)
+new = df2[0].str.split(' ',n=2,expand =True)
+new.columns=['자치구', '위도', '경도']
+new.set_index('자치구',inplace=True)
+new2 = pd.concat([new,df1],axis=1)
+display(new2.head())
+geo_data = json.load(open('./data/seoul_municipalities_geo_simple.json', encoding='utf-8'))
+
+seoul_map = folium.Map(location=[37.55, 126.98], tiles = 'Stamen Terrain' , zoom_start=12)
+new2[['위도','경도']] = new2[['위도','경도']].astype(float)
+#텍스트 표시
+murder ='등록외국인'
+folium.Choropleth(geo_data=geo_data,
+                  data= new2[murder],
+                  columns = [df.index, df[murder]],
+                  fill_color='OrRd',
+                  fill_opacity=0.7,
+                  line_opacity=0.3,
+#threshold_scale=[500, 1000, 2000, 4000, 5000],
+                        key_on = 'feature.properties.name').add_to(seoul_map)
+
+for name, lat, lng in zip(new2.index, new2.위도, new2.경도):
+    folium.map.Marker(
+        [lat, lng-0.01],
+        icon=DivIcon(
+            icon_size=(150,36),
+            icon_anchor=(0,0),
+            html='<div style="font-size: 7pt">%s</div>' % name,
+            )
+        ).add_to(seoul_map)
+for  name, cctv, lat, lng in zip(new2.index, new2['강도'], new2.위도, new2.경도):
+    folium.CircleMarker([lat, lng],
+                        radius=cctv, color='black' ,
+                        fill=True,
+                        fill_color='yellow',
+                        fill_opacity=0.7,
+                        popup = name,
+                       ).add_to(seoul_map)
+
 
 ```
 
